@@ -55,7 +55,7 @@ import { showBrowserNotification } from './lib/browserNotification'
 import { IMAGE_FETCH_CORS_HINT } from './lib/imageApiShared'
 import { getFalErrorMessage, getFalQueuedImageResult } from './lib/falAiImageApi'
 import { getCustomQueuedImageResult } from './lib/openaiCompatibleImageApi'
-import { validateMaskMatchesImage } from './lib/canvasImage'
+import { resizeImageDataUrlToExactSize, validateMaskMatchesImage } from './lib/canvasImage'
 import { orderInputImagesForMask } from './lib/mask'
 import { getChangedParams, normalizeParamsForSettings } from './lib/paramCompatibility'
 import { runWithConcurrency, splitBatchPrompts } from './lib/batchPrompts'
@@ -2185,21 +2185,24 @@ async function storeTaskOutputImages(task: TaskRecord, images: string[]) {
 
   try {
     for (const dataUrl of images) {
-      let outputDataUrl = dataUrl
+      const sizedDataUrl = task.apiProvider === 'sb2api-async'
+        ? await resizeImageDataUrlToExactSize(dataUrl, task.params.size, task.params.output_compression)
+        : dataUrl
+      let outputDataUrl = sizedDataUrl
       if (task.transparentOutput) {
-        const original = await storeImageWithSize(dataUrl, 'generated')
+        const original = await storeImageWithSize(sizedDataUrl, 'generated')
         storedImageIds.push(original.id)
-        cacheImage(original.id, dataUrl)
+        cacheImage(original.id, sizedDataUrl)
 
         try {
           outputDataUrl = task.params.output_format === 'webp'
-            ? await removeKeyedBackgroundFromDataUrl(dataUrl, undefined, 'webp', task.params.output_compression)
-            : await removeKeyedBackgroundFromDataUrl(dataUrl)
+            ? await removeKeyedBackgroundFromDataUrl(sizedDataUrl, undefined, 'webp', task.params.output_compression)
+            : await removeKeyedBackgroundFromDataUrl(sizedDataUrl)
           transparentOriginalImageIds.push(original.id)
         } catch (err) {
           console.warn('透明背景后处理失败，已回退为原始输出', err)
           outputIds.push(original.id)
-          outputDataUrls.push(dataUrl)
+          outputDataUrls.push(sizedDataUrl)
           outputImageSizes.push(original)
           transparentOriginalImageIds.push('')
           continue
