@@ -92,6 +92,16 @@ export function prependCodexCliSizePrompt(prompt: string, size: string) {
   return `${hint} ${trimmed}`
 }
 
+export function appendImageRatioPrompt(prompt: string, size: string) {
+  const match = size.match(SIZE_PATTERN)
+  if (!match) return prompt
+
+  const ratio = formatImageRatio(Number(match[1]), Number(match[2]))
+  if (!ratio || /\b\d+(?:\.\d+)?\s*[:：]\s*\d+(?:\.\d+)?\b/.test(prompt)) return prompt
+
+  return `${prompt.trimEnd()}\n\n请严格按照 ${ratio} 的画面比例生成图片。`
+}
+
 export function stripInjectedCodexCliSizePrompt(prompt: string, originalPrompt: string, size: string) {
   if (size === 'auto') return prompt
   const prefix = `Generate at ${size} resolution.`

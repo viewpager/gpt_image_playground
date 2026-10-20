@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { calculateImageSize, normalizeCodexCliImageSize, prependCodexCliSizePrompt, stripInjectedCodexCliSizePrompt } from './size'
+import { appendImageRatioPrompt, calculateImageSize, normalizeCodexCliImageSize, prependCodexCliSizePrompt, stripInjectedCodexCliSizePrompt } from './size'
+
+describe('appendImageRatioPrompt', () => {
+  it('adds the selected ratio and avoids duplicate ratio instructions', () => {
+    expect(appendImageRatioPrompt('Draw a cat.', '1024x1024')).toBe('Draw a cat.\n\n请严格按照 1:1 的画面比例生成图片。')
+    expect(appendImageRatioPrompt('Use a 3:4 composition.', '768x1024')).toBe('Use a 3:4 composition.')
+    expect(appendImageRatioPrompt('Draw a cat.', 'auto')).toBe('Draw a cat.')
+  })
+})
 
 describe('calculateImageSize', () => {
   it('uses common 16:9 display resolutions for the built-in tiers', () => {

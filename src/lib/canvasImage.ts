@@ -9,6 +9,38 @@ export async function loadImage(dataUrl: string): Promise<HTMLImageElement> {
   })
 }
 
+export async function resizeImageDataUrlToExactSize(dataUrl: string, size: string, compression?: number | null): Promise<string> {
+  const match = size.match(/^(\d+)[xX×](\d+)$/)
+  if (!match) return dataUrl
+  const width = Number(match[1])
+  const height = Number(match[2])
+  if (width <= 0 || height <= 0) return dataUrl
+
+  const image = await loadImage(dataUrl)
+  if (image.naturalWidth === width && image.naturalHeight === height) return dataUrl
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('当前浏览器不支持 Canvas，无法调整图片尺寸')
+  ctx.imageSmoothingQuality = 'high'
+
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight)
+  const sourceWidth = width / scale
+  const sourceHeight = height / scale
+  ctx.drawImage(image,
+    (image.naturalWidth - sourceWidth) / 2,
+    (image.naturalHeight - sourceHeight) / 2,
+    sourceWidth, sourceHeight,
+    0, 0, width, height,
+  )
+
+  const mime = /^data:(image\/(?:png|jpeg|webp));/i.exec(dataUrl)?.[1]?.toLowerCase() ?? 'image/png'
+  const quality = compression == null ? 1 : Math.max(0, Math.min(1, compression / 100))
+  return canvas.toDataURL(mime, quality)
+}
+
 export async function dataUrlToBlob(dataUrl: string, fallbackType = 'image/png'): Promise<Blob> {
   const response = await fetch(dataUrl)
   const blob = await response.blob()

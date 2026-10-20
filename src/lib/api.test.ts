@@ -1566,7 +1566,7 @@ describe('callImageApi', () => {
         activeProfileId: 'sub2api-profile',
       },
       prompt: 'prompt',
-      params: { ...DEFAULT_PARAMS },
+      params: { ...DEFAULT_PARAMS, size: '1024x1024' },
       inputImageDataUrls: [],
       onCustomTaskEnqueued,
     })
@@ -1574,7 +1574,8 @@ describe('callImageApi', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('https://sub2api.example.com/v1/images/generations/async')
     expect(JSON.parse(String((fetchMock.mock.calls[0][1] as RequestInit).body))).toMatchObject({
       model: 'gpt-image-2.5-sunburst',
-      prompt: 'prompt',
+      prompt: 'prompt\n\n请严格按照 1:1 的画面比例生成图片。',
+      size: '1024x1024',
       n: 1,
     })
     expect(fetchMock.mock.calls[1][0]).toBe('https://sub2api.example.com/v1/images/tasks/imgtask-1')

@@ -27,7 +27,7 @@ import {
 import { getImageGenerationModel } from './imageModels'
 import { apiFetch, FetchConnectError } from './platform'
 import { isEventStreamResponse, readJsonServerSentEvents } from './serverSentEvents'
-import { prependCodexCliSizePrompt } from './size'
+import { appendImageRatioPrompt, prependCodexCliSizePrompt } from './size'
 
 function getStreamPartialImages(profile: ApiProfile): number {
   return profile.streamPartialImages ?? DEFAULT_STREAM_PARTIAL_IMAGES
@@ -689,9 +689,12 @@ function createCustomProviderContext(opts: CallApiOptions, profile: ApiProfile) 
   const sizePrompt = profile.codexCli && !opts.skipCodexCliSizePrompt
     ? prependCodexCliSizePrompt(opts.prompt, opts.params.size)
     : opts.prompt
-  const prompt = profile.codexCli && !opts.settings.allowPromptRewrite
-    ? `${PROMPT_REWRITE_GUARD_PREFIX}\n${sizePrompt}`
+  const requestPrompt = profile.provider === 'sb2api-async'
+    ? appendImageRatioPrompt(sizePrompt, opts.params.size)
     : sizePrompt
+  const prompt = profile.codexCli && !opts.settings.allowPromptRewrite
+    ? `${PROMPT_REWRITE_GUARD_PREFIX}\n${requestPrompt}`
+    : requestPrompt
   const params = {
     ...opts.params,
     ...(profile.codexCli ? { size: undefined, quality: undefined } : {}),
