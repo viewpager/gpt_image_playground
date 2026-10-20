@@ -1,3 +1,5 @@
+> 本仓库基于原作者 [CookSleep/gpt_image_playground](https://github.com/CookSleep/gpt_image_playground) 修改，修复了使用 sub2api（异步）生成图片时，实际尺寸与所选尺寸不一致的问题。详见 [修改说明](docs/async-exact-size-customization.md)。
+
 <div align="center">
 
 # 🎨 GPT Image Playground
